@@ -11,7 +11,7 @@
 - [ ] der bruges brugernavn og password, og hele kommunikationen er sikret ved brug af TLS-kryptering
 - [ ] Anordningen er designet strømbesparende, ved brug af DeepSleep og batteridrift
 - [ ] anordningen skal spare strøm ved at skifte til deep-sleep, når den er ubeskæftiget iet stykke tid
-- [ ] eksperimenter og analyser skal vise de bedste tidsgrænser for hvor længeanordningen er ubeskæftiget, men aktiv
+- [ ] eksperimenter og analyser skal vise de bedste tidsgrænser for hvor længe anordningen er ubeskæftiget, men aktiv
 - [ ] samt, hvordan skal opvågnen fungere, så anordningen opdage hvad der sker, ogfalder i søvn igen
 - [ ] en god analyse og overvejelse danner grundlag for hvor længe anordningen sover,inden den vågner rutinemæssigt.
 
