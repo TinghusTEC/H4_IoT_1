@@ -59,3 +59,8 @@ Skal have kigget ind i forskellen på main memory chippen og RTC.
 
 Havde et hul i vores logik for callback funktionen i event servicen. Så den ikke blev triggered i sleep mode.
 Tilføjede
+
+Rendte ind 2 seperate problemer med at vække enheden fra deep sleep.
+Første problem var grundet den måde vi havde sat vores kredsløb op.
+Det andet problem kom sig af at man ikke både kunne have wakeup sat på onboard knappen
+og de almindelige input samtidig
