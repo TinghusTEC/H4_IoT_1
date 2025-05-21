@@ -1,0 +1,124 @@
+[
+    {
+        "id": "025d3b74c46abd7a",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "e7c3ed163f5cbd07",
+        "type": "comment",
+        "z": "025d3b74c46abd7a",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "f11262bbb6b91533",
+        "type": "debug",
+        "z": "025d3b74c46abd7a",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "e3d5c7843d64f05a",
+        "type": "mqtt in",
+        "z": "025d3b74c46abd7a",
+        "name": "",
+        "topic": "esp32/output",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "3d5608f82fc8c3da",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 530,
+        "y": 380,
+        "wires": [
+            [
+                "f11262bbb6b91533"
+            ]
+        ]
+    },
+    {
+        "id": "aee34d664ef390e9",
+        "type": "debug",
+        "z": "025d3b74c46abd7a",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "cd59f420b363dc3f",
+        "type": "mqtt in",
+        "z": "025d3b74c46abd7a",
+        "name": "",
+        "topic": "esp32/time",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "3d5608f82fc8c3da",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 500,
+        "y": 440,
+        "wires": [
+            [
+                "aee34d664ef390e9"
+            ]
+        ]
+    },
+    {
+        "id": "3d5608f82fc8c3da",
+        "type": "mqtt-broker",
+        "name": "mosquitto:1883",
+        "broker": "mosquitto",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
