@@ -6,3 +6,4 @@
 /mosquitto/log/*/mosquitto/log/*
 /mosquitto/log/*
 /mosquitto/data/*
+/nodered_data/*

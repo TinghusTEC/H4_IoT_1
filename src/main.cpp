@@ -8,6 +8,8 @@
 
 #include <ezButton.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
+//#include <NetworkClientSecure.h>
 #include "time.h"
 #include <PubSubClient.h>
 
@@ -19,7 +21,7 @@ const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
 
 const char* mqtt_server = "192.168.0.204";
-WiFiClient espClient;
+WiFiClientSecure espClient;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
 bool isLedOn = false;
@@ -106,7 +108,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("ESP8266Client")) {
+    if (client.connect("ESP8266Client", "esp32", "1234")) {
       Serial.println("connected");
       // Subscribe
       client.subscribe("esp32/output");
@@ -132,8 +134,35 @@ void setup() {
   button3.setDebounceTime(100); 
   button4.setDebounceTime(100); 
 
-  client.setServer(mqtt_server, 1883);
+  //client.setServer(mqtt_server, 1883);
 
+  const char* ca_cert = \
+    "-----BEGIN CERTIFICATE-----\n" \
+    "MIIDETCCAfmgAwIBAgIUeIE1RAnzhwmWd9aBpLAa+spPlGwwDQYJKoZIhvcNAQEL\n" \
+    "BQAwGDEWMBQGA1UEAwwNTXlNb3NxdWl0dG9DQTAeFw0yNTA1MjEwODI4NDhaFw0y\n" \
+    "ODAzMTAwODI4NDhaMBgxFjAUBgNVBAMMDU15TW9zcXVpdHRvQ0EwggEiMA0GCSqG\n" \
+    "SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCxGNgZS59W2+WdV38cbp3Bt0SnCV+AvkN0\n" \
+    "NlGdsA5WnUtueCUhhHxObVZNk2+vwn+K5FVUCBuMxOj/boXsckVXwG6c0vvMo63n\n" \
+    "wXQeD1Wt0Bp3PiUVOO17BONdU2jCns3aPT0B02+JACnu7FtlebA5ajOZzFSYSAUC\n" \
+    "yARgBj5mm4mE0LsrzwvjqnctK3554xY3SPn9GjnxYg2jLomfGMsgnlI9iXj0Quoz\n" \
+    "8l86LuRYvX3XK30g2EYRIArQgl4DNrhtjiOzpsx6vnHEgW+TzYGnGpWuZk8Qf47W\n" \
+    "zAr9YdUJ6JupBL+2G0DcJ+xuavbP0+QEl6z761XUr7Nbqbxq8hLjAgMBAAGjUzBR\n" \
+    "MB0GA1UdDgQWBBQ30bsSszrDI9BsfTVNsTbEV5QPLzAfBgNVHSMEGDAWgBQ30bsS\n" \
+    "szrDI9BsfTVNsTbEV5QPLzAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUA\n" \
+    "A4IBAQAS2e114vsHyv+YHHRJ0lxXL18bnPNMdN11+Pj0VhxrJOJu+ZEmUjrXmGgt\n" \
+    "LwmnON0dj6MNyWTwq+NfoVaYnNhmWBfIZ0i6jlwPwb1GbuRuy6YjIRbRCg8Dwcpm\n" \
+    "UjflEGT0IM/Gp5n+VlF8urkqxNMcBA0vtcaAw8+3utjya1qbaHLQb+JOhfzmHj9P\n" \
+    "wP6XtYT3Abbijm0FMCu3l/JdO80DybqO7DLU2MR+EnitLGXt7a+MgJb9FD6IO9oc\n" \
+    "oIFUu2i1bN/gniXE6I76qHMI1y//WtMK+bEkfu4nF0SiI9YzP/Snt/j9D9LFR1RD\n" \
+    "wm8FeAegca9T+X9cxoGYhW/4FIyP\n" \
+    "-----END CERTIFICATE-----\n";
+
+  Serial.println("Using certificate:");
+  Serial.print(ca_cert);
+
+  espClient.setCACert(ca_cert);
+  //espClient.setInsecure();
+  client.setServer(mqtt_server, 8883);
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
