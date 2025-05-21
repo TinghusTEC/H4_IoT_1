@@ -55,3 +55,5 @@ Hvordan skal logning håndteres når vi ikke har adgang til et netværk hvor vi 
 Hvis vi stoler på det interne risikerer og ikke markerer hvor timestamp kommer fra. Så risikerer
 vi at logning ikke vil være til at være præcis. Umiddelbart vil det nok give mest mening at gemme logs
 hvor vi ikke har fået bekræftet tiden uden timestamp. Så de nemt kan ignoreres.
+
+Skal have kigget ind i forskellen på main memory chippen og RTC.
