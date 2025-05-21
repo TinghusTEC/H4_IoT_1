@@ -47,16 +47,46 @@ void EventService::checkScheduledEvents() {
 }
 
 void EventService::checkSleep() {
-    unsigned long now = millis();
-    if ((now - _lastActivityMs) > (_inactivitySleepMinutes * 60 * 1000)) {
-        for (const auto& entry : _serviceReady) {
-            if (!entry.second) return;
-        }
-        Serial.println("Entering deep sleep due to inactivity...");
-        delay(100); // Allow serial print to flush
+    unsigned long currentTimeMs = millis();
 
-        esp_deep_sleep_start();
+    // Check if inactivity threshold has been reached
+    unsigned long inactivityThresholdMs = _inactivitySleepMinutes * 60 * 1000;
+    if ((currentTimeMs - _lastActivityMs) < inactivityThresholdMs) return;
+
+    // Ensure all services are ready before sleeping
+    for (const auto& [serviceName, isReady] : _serviceReady) {
+        if (!isReady) return;
     }
+
+    Serial.println("Entering deep sleep due to inactivity...");
+    delay(100);
+
+    // Turn off onboard LED (GPIO 2)
+    pinMode(2, OUTPUT);
+    digitalWrite(2, LOW);
+
+    // Set up wakeup timer based on the closest scheduled event
+    if (!_scheduledEvents.empty()) {
+        // Find the earliest scheduled event time
+        unsigned long earliestEventTimeMs = _scheduledEvents.front().first;
+        for (const auto& [eventTime, _] : _scheduledEvents) {
+            if (eventTime < earliestEventTimeMs) {
+                earliestEventTimeMs = eventTime;
+            }
+        }
+
+        // Calculate delay until next event
+        unsigned long delayUntilEventMs = (earliestEventTimeMs > currentTimeMs)
+            ? (earliestEventTimeMs - currentTimeMs)
+            : 0;
+
+        // Schedule wakeup if delay is greater than 0
+        if (delayUntilEventMs > 0) {
+            esp_sleep_enable_timer_wakeup(delayUntilEventMs * 1000); // Convert ms to µs
+        }
+    }
+
+    esp_deep_sleep_start();
 }
 
 void EventService::printWakeupReason() {
