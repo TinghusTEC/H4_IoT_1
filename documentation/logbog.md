@@ -36,3 +36,22 @@ har adgang til
 I forhold til batteri kan det muligvis være relevant at logge hvornår device går i sleep mode,
 hvonår den forlader sleep mode samt årsagen til den har forladt sleep mode. Da det vil tillade os
 at samle noget lidt mere meningsfuldt data sammen. Det vil også kunne bruges til debugging.
+
+## Onsdag d. 20-05-2025
+
+### Plan
+
+Få bygget en service til at håndtere sleep
+Få forbundet til WIFI og hent tidsstempel
+Få forbundet til MQTT
+Få ombygget device så knapper sidder på de korrekte pins for at wake-up fungerer
+Få tilføjet lokal logning på device.
+
+### Faktisk
+
+### Noter
+
+Hvordan skal logning håndteres når vi ikke har adgang til et netværk hvor vi kan få et timestamp.
+Hvis vi stoler på det interne risikerer og ikke markerer hvor timestamp kommer fra. Så risikerer
+vi at logning ikke vil være til at være præcis. Umiddelbart vil det nok give mest mening at gemme logs
+hvor vi ikke har fået bekræftet tiden uden timestamp. Så de nemt kan ignoreres.
