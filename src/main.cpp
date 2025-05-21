@@ -37,6 +37,8 @@ unsigned long previousTime = 0;
 // Define timeout time in milliseconds (example: 2000ms = 2s)
 const long timeoutTime = 2000;
 
+unsigned long lastMsg = 0;
+bool isLedOn = false;
 
 // Current time
 unsigned long led_currentTime = millis();
@@ -54,6 +56,7 @@ const long led_timeoutTime = 1000;
 #define LED_OUT3 21  // The ESP32 pin GPIO12 connected to the button 5
 #define LED_OUT4 19  // The ESP32 pin GPIO12 connected to the button 5
 #define ledPin 2      // The ESP32 pin GPIO2 connected to the LED
+#define ON_BOARD_LED 2 
 
 
 ezButton button1(BUTTON_PIN_1);  // create ezButton object for button 1
@@ -62,18 +65,47 @@ ezButton button3(BUTTON_PIN_3);  // create ezButton object for button 3
 ezButton button4(BUTTON_PIN_4);  // create ezButton object for button 4
 
 void ledOn(int pressed) {
+  if (isLedOn)
+  {
+    return;
+  }
   switch (pressed) {
     case 1:
-      digitalWrite(LED_OUT1, HIGH);  // turn the LED on
+      digitalWrite(LED_OUT1, HIGH);
       break;
     case 2:
-      digitalWrite(LED_OUT2, HIGH);  // turn the LED on
+      digitalWrite(LED_OUT2, HIGH);
       break;
     case 3:
-      digitalWrite(LED_OUT3, HIGH);  // turn the LED on
+      digitalWrite(LED_OUT3, HIGH);
       break;
     case 4:
-      digitalWrite(LED_OUT4, HIGH);  // turn the LED on
+      digitalWrite(LED_OUT4, HIGH); 
+      break;
+    default:
+      break;
+  }
+  led_previousTime = millis();
+  isLedOn = true;
+}
+
+void buttonPress(int button) {
+  switch (button) {
+    case 1:
+      Serial.println("Button 1 pressed");
+      client.publish("esp32/feedback", "Happy");
+      break;
+    case 2:
+      Serial.println("Button 2 pressed");
+      client.publish("esp32/feedback", "Less Happy");
+      break;
+    case 3:
+      Serial.println("Button 3 pressed");
+      client.publish("esp32/feedback", "Unhappy");
+      break;
+    case 4:
+      Serial.println("Button 4 pressed");
+      client.publish("esp32/feedback", "Malding!");
       break;
     default:
       break;
@@ -119,6 +151,7 @@ void setup() {
   button2.setDebounceTime(100);  // set debounce time to 100 milliseconds
   button3.setDebounceTime(100);  // set debounce time to 100 milliseconds
   button4.setDebounceTime(100);  // set debounce time to 100 milliseconds
+  pinMode(ON_BOARD_LED, OUTPUT);  
 
   client.setServer(mqtt_server, 1883);
 
@@ -161,11 +194,10 @@ void loop() {
       Serial.println("Failed to obtain time");
       return;
     }
-    String timeinfostring = (&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    // String msg = "hello world";
-    client.publish("esp32/time", "hello world");
-
+    char timeStr[64];
+    strftime(timeStr, sizeof(timeStr), "%A, %B %d %Y %H:%M:%S", &timeinfo);
+    Serial.println(timeStr);
+    client.publish("esp32/time", timeStr);
   }
 
   // int button1_state = button1.getState();  // the state after debounce
@@ -260,48 +292,29 @@ void loop() {
   //         currentLine += c;      // add it to the end of the currentLine
   //       }
   //     }
-
-    if (button1.isPressed()){
-      Serial.println("The button 1 is pressed");
-      ledOn(1);  // turn the LED on
-      led_previousTime = millis();
-      printLocalTime();
-    }
-    if (button1.isReleased()){
-      Serial.println("The button 1 is released");
-    }
-
-    if (button2.isPressed()){
-      Serial.println("The button 2 is pressed");
-      ledOn(2);  // turn the LED on
-      led_previousTime = millis();
-    }
-    if (button3.isPressed()){
-      Serial.println("The button 3 is pressed");
-      ledOn(3);  // turn the LED on
-      led_previousTime = millis();
-    }
-    if (button4.isPressed()){
-      Serial.println("The button 4 is pressed");
-      ledOn(4);  // turn the LED on
-      led_previousTime = millis();     
-    }
-    
-    led_currentTime = millis();
-    if (led_currentTime - led_previousTime >= led_timeoutTime) {
-      digitalWrite(LED_OUT1, LOW);  // turn the LED off
-      digitalWrite(LED_OUT2, LOW);  // turn the LED off
-      digitalWrite(LED_OUT3, LOW);  // turn the LED off
-      digitalWrite(LED_OUT4, LOW);  // turn the LED off
-    }
+  if (button1.isPressed()){
+    buttonPress(1);
+    ledOn(1);
+  }
+  if (button2.isPressed()){
+    buttonPress(2);
+    ledOn(2);
+  }
+  if (button3.isPressed()){
+    buttonPress(3);
+    ledOn(3);
+  }
+  if (button4.isPressed()){
+    buttonPress(4);
+    ledOn(4);
+  }
+  
+  led_currentTime = millis();
+  if (led_currentTime - led_previousTime >= led_timeoutTime && isLedOn) {
+    digitalWrite(LED_OUT1, LOW);
+    digitalWrite(LED_OUT2, LOW);
+    digitalWrite(LED_OUT3, LOW);
+    digitalWrite(LED_OUT4, LOW);
+    isLedOn = false;
+  }
 }
-
-
-    // Clear the header variable
-    // header = "";
-    // // Close the connection
-    // client.stop();
-    // Serial.println("Client disconnected.");
-    // Serial.println("");
-
-
