@@ -4,20 +4,20 @@
 
 ### Plan
 
-Opsætning af Repo
-Opsætning af IDE
-Opsætning af Hardware
+* Opsætning af Repo
+* Opsætning af IDE
+* Opsætning af Hardware
 
 ### Faktisk
 
-Vi fik sat Repo op på github og sat rettigheder op.
-Vi fik sat hardware op med LED og knapper.
-Vi fik testet at vores device kunne registrere input og aktivere led.
-Vi fik fordelt de relevante arbejdsopgaver.
-Sikrede os at vi begge 2 kunne builde og deploye til ESP32
-Gennemgik dokumentation om ESP32 sleep mode.
-Fået et kort overblik over krav til kode og arkitektur
-Påbegyndte kodning
+* Vi fik sat Repo op på github og sat rettigheder op.
+* Vi fik sat hardware op med LED og knapper.
+* Vi fik testet at vores device kunne registrere input og aktivere led.
+* Vi fik fordelt de relevante arbejdsopgaver.
+* Sikrede os at vi begge 2 kunne builde og deploye til ESP32
+* Gennemgik dokumentation om ESP32 sleep mode.
+* Fået et kort overblik over krav til kode og arkitektur
+* Påbegyndte kodning
 
 ### Noter
 
@@ -41,18 +41,18 @@ at samle noget lidt mere meningsfuldt data sammen. Det vil også kunne bruges ti
 
 ### Plan
 
-Få bygget en service til at håndtere sleep
-Få forbundet til WIFI og hent tidsstempel
-Få forbundet til MQTT
-Få ombygget device så knapper sidder på de korrekte pins for at wake-up fungerer
-Få tilføjet lokal logning på device.
+* Få bygget en service til at håndtere sleep
+* Få forbundet til WIFI og hent tidsstempel
+* Få forbundet til MQTT
+* Få ombygget device så knapper sidder på de korrekte pins for at wake-up fungerer
+* Få tilføjet lokal logning på device.
 
 ### Faktisk
-Vi fik sat en EventService up der understøtter deep sleep og callbacks
-WiFi delen blev kodet-
-Vi fik sat MQTT op med SSL men rendte ind i nogle udfordringer med hensyn til at få den til at snakke med SSL
-Vi fik bygget device om så knapperne kom over på pins der understøttede at vække devicen.
-Vi droppede lokal logning
+* Vi fik sat en EventService up der understøtter deep sleep og callbacks
+* WiFi delen blev kodet.
+* Vi fik sat MQTT op med TSL men rendte ind i nogle udfordringer med hensyn til at få den til at verifisere  certifikater. Certifikaterne blev genereret med openssl og de virker på andre enheder. men ikke på ESP32.
+* Vi fik bygget device om så knapperne kom over på pins der understøttede at vække devicen.
+* Vi droppede lokal logning
 
 ### Noter
 
@@ -74,17 +74,23 @@ og de almindelige input samtidig
 
 ### Plan
 
-Få tilføjet LEDs.
-Lav Map til knapper og LEDs.
-Merge netværks relateret kode med input relateret kode.
-Forbind til fælles MQTT
+* Få tilføjet LEDs.
+* Lav Map til knapper og LEDs.
+* Merge netværks relateret kode med input relateret kode.
+* Forbind til fælles MQTT
 
 ### Faktisk
-LEDs sat op
-Fik tilføjet mapping mellem knapper/leds/vote values
-Fik merged vores branches
-Forbandt til MQTT
-Tilføjede timestamps
-Tilføjede diagram til filer
+* LEDs sat op
+* Fik tilføjet mapping mellem knapper/leds/vote values
+* Fik merged vores 2 arbejdsbranches
+* Forbandt til fælles MQTT Server
+* Tilføjede timestamps
+* Tilføjede diagram til filer
 
 ### Noter
+
+Deep Sleep fungerede ikke helt som forventet. Mens vi kan vække enheden fra deep sleep og den kan gå i deep sleep. Så kan man ikke lytte på flere en én knap når man har sat det op som vores, i pull up mode, så alle knapper sender HIGH når de ikke er trykket ned. En mask skulle sørge for at lytte til alle knapper, men triggeren til wake up findes kun som en der tjekker ALLE knapper for LOW. 
+
+Det vil sige at den aldrig kan vækkes i vore setup med pull up. Dog *burde* man kunne tage signalet fra alle knapperne, og gennem dioder samle knappernes signaler til én pin, Den står så i pullup mode men skulle blive LOW når en af knapperne trykkes ned. 
+
+Problemet er at de dioder vi havde første for meget strøm igennem, så signalet blev aldrig lavt nok til at flippe pinnen til LOW. Der var én enkel diode til rådighed der havde lav nok forward voltage til at det kunne lade sig gøre. Så det blev testet på en enkel knap og det virkede -og i teorien burde vi kunne samle alle knapperne på den måde, uden at de ville interferere med hinanden.  
