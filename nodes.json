@@ -1,0 +1,169 @@
+[
+    {
+        "id": "025d3b74c46abd7a",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "f11262bbb6b91533",
+        "type": "debug",
+        "z": "025d3b74c46abd7a",
+        "name": "debug2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "e3d5c7843d64f05a",
+        "type": "mqtt in",
+        "z": "025d3b74c46abd7a",
+        "name": "",
+        "topic": "esp32/output",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "20f67f20c99af5c8",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 530,
+        "y": 380,
+        "wires": [
+            [
+                "f11262bbb6b91533"
+            ]
+        ]
+    },
+    {
+        "id": "aee34d664ef390e9",
+        "type": "debug",
+        "z": "025d3b74c46abd7a",
+        "name": "Time output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 750,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "cd59f420b363dc3f",
+        "type": "mqtt in",
+        "z": "025d3b74c46abd7a",
+        "name": "",
+        "topic": "esp32/time",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "20f67f20c99af5c8",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 520,
+        "y": 440,
+        "wires": [
+            [
+                "aee34d664ef390e9"
+            ]
+        ]
+    },
+    {
+        "id": "763f31ce152c4b82",
+        "type": "mqtt in",
+        "z": "025d3b74c46abd7a",
+        "name": "",
+        "topic": "esp32/feedback",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "20f67f20c99af5c8",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 540,
+        "y": 520,
+        "wires": [
+            [
+                "710e13e755cad479"
+            ]
+        ]
+    },
+    {
+        "id": "710e13e755cad479",
+        "type": "debug",
+        "z": "025d3b74c46abd7a",
+        "name": "Feedback",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "20f67f20c99af5c8",
+        "type": "mqtt-broker",
+        "name": "mosquittoTls",
+        "broker": "mosquitto",
+        "port": "8883",
+        "tls": "e4b7455ed1a8ed6d",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": true,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "e4b7455ed1a8ed6d",
+        "type": "tls-config",
+        "name": "",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "ca.crt",
+        "servername": "",
+        "verifyservercert": false,
+        "alpnprotocol": ""
+    }
+]
