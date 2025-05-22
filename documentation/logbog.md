@@ -37,7 +37,7 @@ I forhold til batteri kan det muligvis være relevant at logge hvornår device g
 hvonår den forlader sleep mode samt årsagen til den har forladt sleep mode. Da det vil tillade os
 at samle noget lidt mere meningsfuldt data sammen. Det vil også kunne bruges til debugging.
 
-## Onsdag d. 20-05-2025
+## Onsdag d. 21-05-2025
 
 ### Plan
 
@@ -48,6 +48,11 @@ Få ombygget device så knapper sidder på de korrekte pins for at wake-up funge
 Få tilføjet lokal logning på device.
 
 ### Faktisk
+Vi fik sat en EventService up der understøtter deep sleep og callbacks
+WiFi delen blev kodet-
+Vi fik sat MQTT op med SSL men rendte ind i nogle udfordringer med hensyn til at få den til at snakke med SSL
+Vi fik bygget device om så knapperne kom over på pins der understøttede at vække devicen.
+Vi droppede lokal logning
 
 ### Noter
 
@@ -64,3 +69,22 @@ Rendte ind 2 seperate problemer med at vække enheden fra deep sleep.
 Første problem var grundet den måde vi havde sat vores kredsløb op.
 Det andet problem kom sig af at man ikke både kunne have wakeup sat på onboard knappen
 og de almindelige input samtidig
+
+## Torsdag d. 22-05-2025
+
+### Plan
+
+Få tilføjet LEDs.
+Lav Map til knapper og LEDs.
+Merge netværks relateret kode med input relateret kode.
+Forbind til fælles MQTT
+
+### Faktisk
+LEDs sat op
+Fik tilføjet mapping mellem knapper/leds/vote values
+Fik merged vores branches
+Forbandt til MQTT
+Tilføjede timestamps
+Tilføjede diagram til filer
+
+### Noter
