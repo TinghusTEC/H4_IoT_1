@@ -6,6 +6,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include "time.h"
+#include <ArduinoJson.h>
 #include <PubSubClient.h>
 
 RTC_DATA_ATTR int wakeup_count = 0;
@@ -69,6 +70,21 @@ int currentButtonPin = -1;
 // Single ClickHandler for all votes (7s block period)
 ClickHandler voteClickHandler(7000);
 
+String getTimeString() {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+        return "";
+    }
+    char buffer[64];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+    return String(buffer);
+}
+
+void printLocalTime(){
+  Serial.println(getTimeString());
+}
+
 void blinkLED(int pin,  unsigned long duration) {
     pinMode(pin, OUTPUT);
     unsigned long current = millis();
@@ -109,7 +125,18 @@ void mqttCallback(const char* topic, char* payload) {
     Serial.print(" payload: ");
     Serial.print(payload);
     Serial.println("] ");
-    client.publish(topic, payload);
+
+    JsonDocument doc;
+    doc["feedback"] = payload;
+    doc["timestamp"] = getTimeString();
+
+    char jsonBuffer[256];
+    serializeJson(doc, jsonBuffer);
+
+    Serial.print("Publishing JSON: ");
+    Serial.println(jsonBuffer);
+
+    client.publish(topic, jsonBuffer);
 }
 
 // Callback for ClickHandler
@@ -136,15 +163,6 @@ void buttonCallback() {
 void dummyCallback() {
     Serial.println("Dummy scheduled callback fired!");
     EventService::instance().resetInactivityTimer();
-}
-
-void printLocalTime(){
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return;
-  }
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
 void setup() {
@@ -199,10 +217,7 @@ void setup() {
     pinMode(2, OUTPUT);
     while (WiFi.status() != WL_CONNECTED) {
         Serial.print(".");
-        delay(250);
-        digitalWrite(2, HIGH);
-        delay(250);
-        digitalWrite(2, LOW);
+        blinkLED(2, 1000);
     }
     
     Serial.println("");
