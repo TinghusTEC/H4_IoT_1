@@ -6,20 +6,70 @@
 
 RTC_DATA_ATTR int wakeup_count = 0;
 
-const int buttonPin = 0; // ESP32 built-in BOOT button
-const int ledPin = 2;    // ESP32 built-in LED
+// Voting types
+enum VoteType { BAD, NEUTRAL, GOOD, VERY_GOOD };
 
-LEDHandler led(ledPin, true);
-ClickHandler clickHandler;
+// Button-to-LED mapping and vote type
+struct ButtonVoteMap {
+    int buttonPin;
+    LEDHandler* led;
+    VoteType vote;
+    int ledPin;
+};
+
+// Create LEDHandler instances for each LED
+LEDHandler ledBad(23, true);
+LEDHandler ledNeutral(22, true);
+LEDHandler ledGood(19, true);
+LEDHandler ledVeryGood(18, true);
+
+// Map buttons to LEDs and votes
+ButtonVoteMap voteMappings[] = {
+    {26, &ledBad, BAD, 23},
+    {27, &ledNeutral, NEUTRAL, 22},
+    {14, &ledGood, GOOD, 19},
+    {13, &ledVeryGood, VERY_GOOD, 18}
+};
+const int numVotes = sizeof(voteMappings) / sizeof(voteMappings[0]);
+
+// Helper to print vote type
+void printVote(VoteType vote) {
+    switch (vote) {
+        case BAD: Serial.print("BAD"); break;
+        case NEUTRAL: Serial.print("NEUTRAL"); break;
+        case GOOD: Serial.print("GOOD"); break;
+        case VERY_GOOD: Serial.print("VERY GOOD"); break;
+    }
+}
+
+// Global variable to pass button pin to callback
+int currentButtonPin = -1;
+
+// Single ClickHandler for all votes (7s block period)
+ClickHandler voteClickHandler(7000);
+
+// Callback for ClickHandler
+void buttonCallback() {
+    if (currentButtonPin != -1) {
+        for (int i = 0; i < numVotes; ++i) {
+            if (voteMappings[i].buttonPin == currentButtonPin) {
+                Serial.print("Vote cast: ");
+                printVote(voteMappings[i].vote);
+                Serial.print(" (Button GPIO ");
+                Serial.print(voteMappings[i].buttonPin);
+                Serial.print(", LED GPIO ");
+                Serial.print(voteMappings[i].ledPin);
+                Serial.println(")");
+                voteMappings[i].led->turnOnForSeconds(7);
+                EventService::instance().resetInactivityTimer();
+                break;
+            }
+        }
+    }
+}
 
 void dummyCallback() {
     Serial.println("Dummy scheduled callback fired!");
-    EventService::instance().resetInactivityTimer();
-}
-
-void onButtonClick() {
-    Serial.println("Button pressed");
-    led.turnOnForSeconds(2);
     EventService::instance().resetInactivityTimer();
 }
 
@@ -31,27 +81,27 @@ void setup() {
 
     esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
 
-
     // If not first boot and wakeup reason is 0, go back to sleep
     if (wakeup_count > 1 && wakeup_reason == 0) {
         Serial.println("suspicious wakeup detected, going back to sleep.");
-        pinMode(ledPin, OUTPUT);
-        digitalWrite(ledPin, LOW);
+        pinMode(2, OUTPUT);
+        digitalWrite(2, LOW);
         delay(100);
         esp_deep_sleep_start();
     }
 
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, 0); // Wake up on button press (active LOW)
+    // Enable deep sleep wakeup on all vote buttons (EXT1)
+    uint64_t mask = 0;
+    for (int i = 0; i < numVotes; ++i) {
+        pinMode(voteMappings[i].buttonPin, INPUT_PULLUP);
+        mask |= (1ULL << voteMappings[i].buttonPin);
+    }
+    esp_sleep_enable_ext1_wakeup(mask, ESP_EXT1_WAKEUP_ALL_LOW);
 
     // Print the wakeup reason
     EventService::instance().printWakeupReason();
 
-    pinMode(buttonPin, INPUT_PULLUP);
     Serial.println("Setup started");
-
-    // Turn ON onboard LED after wakeup
-    pinMode(ledPin, OUTPUT);
-    digitalWrite(ledPin, HIGH);
 
     // Register services
     EventService::instance().registerService("button");
@@ -69,10 +119,16 @@ void setup() {
 }
 
 void loop() {
-    if (digitalRead(buttonPin) == LOW) {
-        clickHandler.handleClick(onButtonClick);
-        while (digitalRead(buttonPin) == LOW) {
-            delay(10);
+    // Check all vote buttons
+    for (int i = 0; i < numVotes; ++i) {
+        if (digitalRead(voteMappings[i].buttonPin) == LOW) {
+            currentButtonPin = voteMappings[i].buttonPin;
+            voteClickHandler.handleClick(buttonCallback);
+            // Wait for button release to avoid multiple triggers
+            while (digitalRead(voteMappings[i].buttonPin) == LOW) {
+                delay(10);
+            }
+            currentButtonPin = -1;
         }
     }
     EventService::instance().update();
