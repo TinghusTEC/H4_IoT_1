@@ -3,8 +3,28 @@
 #include "ClickHandler.h"
 #include "EventService.h"
 #include <esp_sleep.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include "time.h"
+#include <PubSubClient.h>
 
 RTC_DATA_ATTR int wakeup_count = 0;
+
+const char* ssid = "IoT_H3/4";
+const char* password = "98806829";
+const char* mqttUser = "device03";
+const char* mqttPassword = "device03-password";
+const char* mqttTopicFeedback = "sensor/device03/feedback";
+const char* mqttTopicTime = "sensor/device03/time";
+
+const char* ntpServer = "0.dk.pool.ntp.org";
+const long  gmtOffset_sec = 3600;
+const int   daylightOffset_sec = 3600;
+
+const char* mqtt_server = "192.168.0.130";
+WiFiClient espClient;
+PubSubClient client(espClient);
+unsigned long lastMsg = 0;
 
 // Voting types
 enum VoteType { BAD, NEUTRAL, GOOD, VERY_GOOD };
@@ -33,13 +53,14 @@ ButtonVoteMap voteMappings[] = {
 const int numVotes = sizeof(voteMappings) / sizeof(voteMappings[0]);
 
 // Helper to print vote type
-void printVote(VoteType vote) {
+String printVote(VoteType vote) {
     switch (vote) {
-        case BAD: Serial.print("BAD"); break;
-        case NEUTRAL: Serial.print("NEUTRAL"); break;
-        case GOOD: Serial.print("GOOD"); break;
-        case VERY_GOOD: Serial.print("VERY GOOD"); break;
+        case BAD: return "BAD";
+        case NEUTRAL: return "NEUTRAL";
+        case GOOD:return "GOOD";
+        case VERY_GOOD: return "VERY GOOD";
     }
+    return "UNKNOWN";
 }
 
 // Global variable to pass button pin to callback
@@ -48,18 +69,62 @@ int currentButtonPin = -1;
 // Single ClickHandler for all votes (7s block period)
 ClickHandler voteClickHandler(7000);
 
+void blinkLED(int pin,  unsigned long duration) {
+    pinMode(pin, OUTPUT);
+    unsigned long current = millis();
+    unsigned long waitTime = current + duration;
+    while(current < waitTime)
+        {
+            digitalWrite(pin, HIGH);
+            delay(100);
+            digitalWrite(pin, LOW);
+            delay(100);
+            current = millis();
+        }
+}
+
+void mqttReconnect() {
+    while (!client.connected()) {
+        Serial.print("Attempting MQTT connection...");
+        if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
+            Serial.println("connected");
+        } 
+        else {
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 5 seconds");
+        pinMode(2, OUTPUT);
+        blinkLED(2, 5000);
+        }
+    }
+}
+
+// Callback for MQTT messages
+void mqttCallback(const char* topic, char* payload) {
+    if (!client.connected()) {
+        mqttReconnect();
+    }
+    Serial.print("Message arrived [");
+    Serial.print(topic);
+    Serial.print(" payload: ");
+    Serial.print(payload);
+    Serial.println("] ");
+    client.publish(topic, payload);
+}
+
 // Callback for ClickHandler
 void buttonCallback() {
     if (currentButtonPin != -1) {
         for (int i = 0; i < numVotes; ++i) {
             if (voteMappings[i].buttonPin == currentButtonPin) {
                 Serial.print("Vote cast: ");
-                printVote(voteMappings[i].vote);
+                Serial.print(printVote(voteMappings[i].vote));
                 Serial.print(" (Button GPIO ");
                 Serial.print(voteMappings[i].buttonPin);
                 Serial.print(", LED GPIO ");
                 Serial.print(voteMappings[i].ledPin);
                 Serial.println(")");
+                mqttCallback(mqttTopicFeedback, (char*)printVote(voteMappings[i].vote).c_str());
                 voteMappings[i].led->turnOnForSeconds(7);
                 EventService::instance().resetInactivityTimer();
                 break;
@@ -71,6 +136,15 @@ void buttonCallback() {
 void dummyCallback() {
     Serial.println("Dummy scheduled callback fired!");
     EventService::instance().resetInactivityTimer();
+}
+
+void printLocalTime(){
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return;
+  }
+  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
 void setup() {
@@ -116,6 +190,29 @@ void setup() {
 
     // Schedule a dummy callback in 2 minutes
     EventService::instance().scheduleCallback(2, dummyCallback);
+
+    // Connect to WiFi
+    client.setServer(mqtt_server, 1883);
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+    WiFi.begin(ssid, password);
+    pinMode(2, OUTPUT);
+    while (WiFi.status() != WL_CONNECTED) {
+        Serial.print(".");
+        delay(250);
+        digitalWrite(2, HIGH);
+        delay(250);
+        digitalWrite(2, LOW);
+    }
+    
+    Serial.println("");
+    Serial.println("WiFi connected.");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    
+    // Set up ntp server for time synchronization
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    printLocalTime();
 }
 
 void loop() {
