@@ -9,12 +9,17 @@
 #include <ezButton.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-//#include <NetworkClientSecure.h>
 #include "time.h"
 #include <PubSubClient.h>
 
 const char* ssid = "IoT_H3/4";
 const char* password = "98806829";
+
+const char* mqttUser = "esp32";
+const char* mqttPassword = "1234";
+const char* mqttTopicOutput = "esp32/output";
+const char* mqttTopicFeedback = "esp32/feedback";
+const char* mqttTopicTime = "esp32/time";
 
 const char* ntpServer = "0.dk.pool.ntp.org";
 const long  gmtOffset_sec = 3600;
@@ -39,7 +44,6 @@ const long led_timeoutTime = 1000;
 #define LED_OUT3 21
 #define LED_OUT4 19
 #define ON_BOARD_LED 2 
-
 
 ezButton button1(BUTTON_PIN_1); 
 ezButton button2(BUTTON_PIN_2);
@@ -75,19 +79,19 @@ void buttonPress(int button) {
   switch (button) {
     case 1:
       Serial.println("Button 1 pressed");
-      client.publish("esp32/feedback", "Happy");
+      client.publish(mqttTopicFeedback, "Happy");
       break;
     case 2:
       Serial.println("Button 2 pressed");
-      client.publish("esp32/feedback", "Less Happy");
+      client.publish(mqttTopicFeedback, "Less Happy");
       break;
     case 3:
       Serial.println("Button 3 pressed");
-      client.publish("esp32/feedback", "Unhappy");
+      client.publish(mqttTopicFeedback, "Unhappy");
       break;
     case 4:
       Serial.println("Button 4 pressed");
-      client.publish("esp32/feedback", "Malding!");
+      client.publish(mqttTopicFeedback, "Malding!");
       break;
     default:
       break;
@@ -104,19 +108,15 @@ void printLocalTime(){
 }
 
 void reconnect() {
-  // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (client.connect("ESP8266Client", "esp32", "1234")) {
+    if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
       Serial.println("connected");
-      // Subscribe
-      client.subscribe("esp32/output");
+      client.subscribe(mqttTopicOutput);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
       delay(5000);
     }
   }
@@ -133,8 +133,6 @@ void setup() {
   button2.setDebounceTime(100);  
   button3.setDebounceTime(100); 
   button4.setDebounceTime(100); 
-
-  //client.setServer(mqtt_server, 1883);
 
   const char* ca_cert = \
     "-----BEGIN CERTIFICATE-----\n" \
@@ -187,7 +185,6 @@ void loop() {
   button3.loop();
   button4.loop();
 
-
   if (!client.connected()) {
     reconnect();
   }
@@ -204,7 +201,7 @@ void loop() {
     char timeStr[64];
     strftime(timeStr, sizeof(timeStr), "%A, %B %d %Y %H:%M:%S", &timeinfo);
     Serial.println(timeStr);
-    client.publish("esp32/time", timeStr);
+    client.publish(mqttTopicTime, timeStr);
   }
 
   if (button1.isPressed()){
